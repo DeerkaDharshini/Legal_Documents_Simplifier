@@ -1,40 +1,33 @@
 import React from "react";
 import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 
 function About() {
-
   return (
     <div>
-
       <Navbar />
 
-      <h1>About This Project</h1>
+      <section className="about-section">
+        <h1>About This Project</h1>
 
-      <p>
+        <p>
+          Legal documents are difficult for many people to understand.
+          This AI system simplifies legal text, translates it into Tamil,
+          and provides an audio explanation to make legal documents
+          accessible to everyone.
+        </p>
 
-      Legal documents are difficult for many people to understand.
+        <h3>Technologies Used</h3>
 
-      This AI system simplifies legal text, translates it into Tamil,
-      and provides an audio explanation.
+        <ul>
+          <li>React</li>
+          <li>FastAPI</li>
+          <li>Google Gemini 2.0 Flash — Text Simplification, Risk Analysis &amp; Translation</li>
+          <li>gTTS — Audio Generation</li>
+        </ul>
+      </section>
 
-      </p>
-
-      <h3>Technologies Used</h3>
-
-      <ul>
-
-        <li>React</li>
-
-        <li>FastAPI</li>
-
-        <li>LangChain</li>
-
-        <li>Mistral LLM</li>
-
-        <li>gTTS</li>
-
-      </ul>
-
+      <Footer />
     </div>
   );
 }

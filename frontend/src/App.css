@@ -262,3 +262,128 @@ color:white;
 0%{opacity:0;transform:translateY(20px);}
 100%{opacity:1;transform:translateY(0);}
 }
+
+/* ERROR MESSAGE */
+
+.error-message{
+background:#fef2f2;
+color:#dc2626;
+border:1px solid #fecaca;
+border-radius:8px;
+padding:12px 20px;
+margin:15px auto;
+width:60%;
+text-align:center;
+font-size:14px;
+animation:fadeIn 0.3s ease-in;
+}
+
+/* RESULTS PAGE */
+
+.results-section{
+padding:60px 80px;
+text-align:center;
+animation:fadeIn 0.8s ease-in;
+}
+
+.results-section h1{
+color:#1e3a8a;
+margin-bottom:30px;
+}
+
+.results-actions{
+margin-top:30px;
+display:flex;
+justify-content:center;
+gap:15px;
+}
+
+/* RISK RESULTS */
+
+.risk-results{
+padding:20px 80px 60px;
+text-align:center;
+}
+
+.risk-results h2{
+color:#1e3a8a;
+margin-bottom:20px;
+}
+
+.no-risks{
+text-align:center;
+padding:40px;
+color:#6b7280;
+}
+
+.no-risks h2{
+color:#10b981;
+margin-bottom:10px;
+}
+
+/* SECTION SUBTITLE */
+
+.section-subtitle{
+color:#6b7280;
+font-size:16px;
+margin-bottom:20px;
+}
+
+/* HOW IT WORKS PAGE */
+
+.how-section{
+padding:60px 80px;
+max-width:800px;
+margin:auto;
+}
+
+.how-section h1{
+color:#1e3a8a;
+margin-bottom:30px;
+text-align:center;
+}
+
+.steps-list{
+font-size:16px;
+line-height:2.2;
+padding-left:20px;
+}
+
+.steps-list li{
+margin-bottom:8px;
+}
+
+/* ABOUT PAGE */
+
+.about-section{
+padding:60px 80px;
+max-width:800px;
+margin:auto;
+}
+
+.about-section h1{
+color:#1e3a8a;
+margin-bottom:20px;
+text-align:center;
+}
+
+.about-section p{
+font-size:16px;
+line-height:1.8;
+color:#374151;
+margin-bottom:30px;
+}
+
+.about-section ul{
+font-size:15px;
+line-height:2;
+padding-left:20px;
+}
+
+/* DISABLED BUTTON */
+
+button:disabled{
+background:#93c5fd;
+cursor:not-allowed;
+transform:none;
+}

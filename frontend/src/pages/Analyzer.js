@@ -1,62 +1,58 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 import Navbar from "../components/Navbar";
 import UploadBox from "../components/UploadBox";
 import TextInput from "../components/TextInput";
 import Loader from "../components/Loader";
-import ResultCard from "../components/ResultCard";
-import AudioPlayer from "../components/AudioPlayer";
+import Footer from "../components/Footer";
+
+const API_BASE = "http://127.0.0.1:8000";
 
 function Analyzer() {
-
+  const navigate = useNavigate();
   const [text, setText] = useState("");
   const [file, setFile] = useState(null);
-  const [simplified, setSimplified] = useState("");
-  const [tamil, setTamil] = useState("");
-  const [audio, setAudio] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const analyze = async () => {
+    setError("");
 
     if (!text && !file) {
-      alert("Enter text or upload file");
+      setError("Please enter text or upload a file before analyzing.");
       return;
     }
 
     setLoading(true);
 
     try {
+      let res;
 
       if (file) {
-
         const formData = new FormData();
         formData.append("file", file);
-
-        const res = await axios.post(
-          "http://127.0.0.1:8000/upload/",
-          formData
-        );
-
-        setSimplified(res.data.simplified_text);
-        setTamil(res.data.tamil_text);
-        setAudio(res.data.audio_url);
-
+        res = await axios.post(`${API_BASE}/upload/`, formData);
       } else {
-
-        const res = await axios.post(
-          "http://127.0.0.1:8000/simplify/",
-          { text }
-        );
-
-        setSimplified(res.data.simplified_text);
-        setTamil(res.data.tamil_text);
-        setAudio(res.data.audio_url);
-
+        res = await axios.post(`${API_BASE}/simplify/`, { text });
       }
 
+      navigate("/results", {
+        state: {
+          simplified: res.data.simplified_text,
+          tamil: res.data.tamil_text,
+          audio: res.data.audio_url,
+        },
+      });
     } catch (err) {
-      alert("Backend error");
+      if (err.response && err.response.data && err.response.data.detail) {
+        setError(err.response.data.detail);
+      } else if (err.message) {
+        setError(`Connection error: ${err.message}`);
+      } else {
+        setError("An unexpected error occurred. Please try again.");
+      }
     }
 
     setLoading(false);
@@ -64,11 +60,9 @@ function Analyzer() {
 
   return (
     <div>
-
       <Navbar />
 
       <section className="analyzer">
-
         <h1>Analyze Legal Document</h1>
 
         <UploadBox setFile={setFile} />
@@ -77,30 +71,16 @@ function Analyzer() {
 
         <TextInput text={text} setText={setText} />
 
-        <button onClick={analyze}>
-          Analyze Document
-        </button>
+        {error && <div className="error-message">{error}</div>}
 
+        <button onClick={analyze} disabled={loading}>
+          {loading ? "Analyzing..." : "Analyze Document"}
+        </button>
       </section>
 
       {loading && <Loader />}
 
-      {simplified && (
-        <ResultCard
-          title="Simplified English"
-          text={simplified}
-        />
-      )}
-
-      {tamil && (
-        <ResultCard
-          title="Tamil Translation"
-          text={tamil}
-        />
-      )}
-
-      <AudioPlayer audio={audio} />
-
+      <Footer />
     </div>
   );
 }

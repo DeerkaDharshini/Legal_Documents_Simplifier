@@ -1,254 +1,21 @@
-# from langchain_ollama import ChatOllama
-# from fastapi import FastAPI, UploadFile, File
-# from fastapi.middleware.cors import CORSMiddleware
-# from pydantic import BaseModel
-
-# from langchain_community.chat_models import ChatOllama
-# from langchain_core.prompts import ChatPromptTemplate
-
-# from gtts import gTTS
-
-# from PyPDF2 import PdfReader
-# import docx
-
-# import json
-# import os
-# import hashlib
-
-# app = FastAPI()
-
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=["*"],
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
-
-# # ----------- CREATE AUDIO FOLDER -----------
-
-# os.makedirs("audio", exist_ok=True)
-
-# # ----------- REQUEST MODEL -----------
-
-# class TextRequest(BaseModel):
-#     text: str
-
-# # ----------- MODEL -----------
-
-# llm = ChatOllama(
-#     model="mistral",
-#     temperature=0.1
-# )
-
-# # ----------- PROMPT -----------
-
-# prompt = ChatPromptTemplate.from_template("""
-# You are a legal document simplifier.
-
-# Your task is to simplify legal text into clear, simple English.
-
-# IMPORTANT RULES:
-
-# If the text is SHORT (1-2 sentences):
-# - Convert it into ONE simple sentence
-# - Maximum 12 words
-
-# If the text is LONG (document, multiple paragraphs):
-# - Extract ALL important information
-# - Do NOT summarize into one sentence
-# - Convert into multiple short bullet points
-
-# You MUST include:
-# • Important rules
-# • Deadlines
-# • Responsibilities
-# • Penalties
-# • Rights
-# • Important dates
-# • Required actions
-
-# Remove:
-# • Repeated sentences
-# • Legal jargon
-# • Unnecessary wording
-
-# Each bullet must:
-# - Be clear
-# - Be simple
-# - Be under 15 words
-
-# Also translate EACH bullet into simple spoken Tamil.
-
-# IMPORTANT :
-# Return ONLY valid JSON.
-
-
-# FORMAT:
-# {{
-#   "simplified_text": "...",
-#   "tamil_text": "..."
-# }}
-
-# TEXT:
-# {text}
-# """)
-
-# # ----------- TEXT INPUT API -----------
-
-# @app.post("/simplify/")
-# async def simplify_text(request: TextRequest):
-#     try:
-#         chain = prompt | llm
-#         response = chain.invoke({"text": request.text})
-
-#         raw_output = response.content.strip()
-
-#         try:
-#             start = raw_output.find("{")
-#             end = raw_output.rfind("}") + 1
-#             clean_json = raw_output[start:end]
-
-#             parsed = json.loads(clean_json)
-
-#             simplified = parsed.get("simplified_text", "").strip()
-#             tamil = parsed.get("tamil_text", "").strip()
-
-#         except Exception:
-#             simplified = raw_output
-#             tamil = ""
-
-#         # ----------- AUDIO -----------
-
-#         audio_url = ""
-
-#         if simplified:
-#             file_hash = hashlib.md5(simplified.encode()).hexdigest()
-#             file_path = f"audio/{file_hash}.mp3"
-
-#             if not os.path.exists(file_path):
-#                 tts = gTTS(text=simplified, lang='en')
-#                 tts.save(file_path)
-
-#             audio_url = f"http://127.0.0.1:8000/audio/{file_hash}.mp3"
-
-#         return {
-#             "simplified_text": simplified,
-#             "tamil_text": tamil,
-#             "audio_url": audio_url
-#         }
-
-#     except Exception as e:
-#         return {"error": str(e)}
-
-# # ----------- FILE TEXT EXTRACTION FUNCTION -----------
-
-# def extract_text_from_file(file: UploadFile):
-#     text = ""
-
-#     if file.filename.endswith(".pdf"):
-#         pdf = PdfReader(file.file)
-#         for page in pdf.pages:
-#             text += page.extract_text() or ""
-
-#     elif file.filename.endswith(".docx"):
-#         doc = docx.Document(file.file)
-#         for para in doc.paragraphs:
-#             text += para.text + "\n"
-
-#     else:
-#         text = file.file.read().decode("utf-8")
-
-#     return text.strip()
-
-# # ----------- FILE UPLOAD API -----------
-
-# @app.post("/upload/")
-# async def upload_file(file: UploadFile = File(...)):
-#     try:
-#         extracted_text = extract_text_from_file(file)
-
-#         if not extracted_text:
-#             return {"error": "No text extracted"}
-
-#         # ⚠️ Limit text size (important)
-#         extracted_text = extracted_text[:1000]
-
-#         # ----------- AI PROCESSING -----------
-
-#         chain = prompt | llm
-#         response = chain.invoke({"text": extracted_text})
-
-#         raw_output = response.content.strip()
-
-#         try:
-#             start = raw_output.find("{")
-#             end = raw_output.rfind("}") + 1
-#             clean_json = raw_output[start:end]
-
-#             parsed = json.loads(clean_json)
-
-#             simplified = parsed.get("simplified_text", "").strip()
-#             tamil = parsed.get("tamil_text", "").strip()
-
-#         except Exception:
-#             simplified = raw_output
-#             tamil = ""
-
-#         # ----------- AUDIO -----------
-
-#         audio_url = ""
-
-#         if simplified:
-#             file_hash = hashlib.md5(simplified.encode()).hexdigest()
-#             file_path = f"audio/{file_hash}.mp3"
-
-#             if not os.path.exists(file_path):
-#                 tts = gTTS(text=simplified, lang='en')
-#                 tts.save(file_path)
-
-#             audio_url = f"http://127.0.0.1:8000/audio/{file_hash}.mp3"
-
-#         return {
-#             "simplified_text": simplified,
-#             "tamil_text": tamil,
-#             "audio_url": audio_url
-#         }
-
-#     except Exception as e:
-#         return {"error": str(e)}
-
-# # ----------- AUDIO ROUTE -----------
-
-# @app.get("/audio/{filename}")
-# async def get_audio(filename: str):
-#     file_path = f"audio/{filename}"
-
-#     if os.path.exists(file_path):
-#         return FileResponse(file_path, media_type="audio/mpeg")
-
-#     return {"error": "Audio not found"}
-
-from fastapi import FastAPI, UploadFile, File
+﻿from fastapi import FastAPI, UploadFile, File, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-from langchain_ollama import ChatOllama
-from langchain_core.prompts import ChatPromptTemplate
-
+import google.generativeai as genai
 from gtts import gTTS
-
 from PyPDF2 import PdfReader
 import docx
 
 import json
 import os
 import hashlib
+import re
+
+# ----------- APP SETUP -----------
 
 app = FastAPI()
-
-# ----------- CORS -----------
 
 app.add_middleware(
     CORSMiddleware,
@@ -258,193 +25,309 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ----------- CREATE AUDIO FOLDER -----------
-
 os.makedirs("audio", exist_ok=True)
+
+# ----------- CREDENTIALS -----------
+
+GEMINI_API_KEY = "AIzaSyCZulFrxKehEio8KeUci8N_byn9ib1lZYQ"
+
+# ----------- GEMINI SETUP -----------
+
+genai.configure(api_key=GEMINI_API_KEY)
+gemini_model = genai.GenerativeModel("gemini-2.0-flash")
+print("Gemini API configured successfully!")
 
 # ----------- REQUEST MODEL -----------
 
 class TextRequest(BaseModel):
     text: str
 
-# ----------- LLM MODEL -----------
+# ----------- DOCUMENT CHUNKING -----------
 
-llm = ChatOllama(
-    model="mistral",
-    temperature=0.1
-)
+def chunk_text(text, max_chunk_size=4000):
+    """Split text into chunks at sentence boundaries."""
+    if len(text) <= max_chunk_size:
+        return [text]
 
-# ----------- PROMPT -----------
+    sentences = re.split(r'(?<=[.!?])\s+', text)
+    chunks = []
+    current_chunk = ""
 
-prompt = ChatPromptTemplate.from_template("""
-You are a legal document simplifier.
+    for sentence in sentences:
+        if len(current_chunk) + len(sentence) + 1 <= max_chunk_size:
+            current_chunk += (" " + sentence if current_chunk else sentence)
+        else:
+            if current_chunk:
+                chunks.append(current_chunk.strip())
+            current_chunk = sentence
 
-Your task is to simplify legal text into clear, simple English.
+    if current_chunk:
+        chunks.append(current_chunk.strip())
 
-IMPORTANT RULES:
+    return chunks if chunks else [text[:max_chunk_size]]
 
-If the text is SHORT (1-2 sentences):
-- Convert it into ONE simple sentence
-- Maximum 12 words
+# ----------- LLM GENERATION -----------
 
-If the text is LONG (document, multiple paragraphs):
-- Extract ALL important information
-- Do NOT summarize into one sentence
-- Convert into multiple short bullet points
+def generate_with_gemini(prompt_text):
+    """Generate text using Gemini API."""
+    response = gemini_model.generate_content(prompt_text)
+    return response.text.strip()
 
-You MUST include:
-• Important rules
-• Deadlines
-• Responsibilities
-• Penalties
-• Rights
-• Important dates
-• Required actions
+# ----------- SIMPLIFICATION -----------
 
-Remove:
-• Repeated sentences
-• Legal jargon
-• Unnecessary wording
+SIMPLIFY_PROMPT = """Simplify the following legal text into plain English. Extract every key detail.
 
-Each bullet must:
-- Be clear
-- Be simple
-- Be under 15 words
+You MUST capture ALL of the following if present:
+- Parties involved (names, roles)
+- Effective dates, start dates, end dates, renewal dates
+- Payment amounts, fees, interest rates, penalties for late payment
+- Obligations and responsibilities of each party
+- Rights granted to each party
+- Termination conditions and notice periods
+- Confidentiality or non-disclosure requirements
+- Non-compete or exclusivity clauses
+- Limitation of liability and indemnification terms
+- Warranty or guarantee terms
+- Governing law and jurisdiction
+- Dispute resolution method (arbitration, mediation, court)
+- Intellectual property ownership
+- Data privacy and usage terms
+- Force majeure or exception clauses
+- Amendment and modification procedures
+- Any numerical values: dollar amounts, percentages, time periods, quantities
 
-IMPORTANT:
-Return ONLY valid JSON.
+Rules:
+- Use short bullet points, each under 20 words
+- Use plain simple English, no legal jargon
+- Do NOT skip any clause or section
+- Do NOT merge unrelated points into one bullet
+- Preserve all specific numbers, dates, names, and amounts exactly
 
-FORMAT:
-{{
-  "simplified_text": "..."
-}}
-
-TEXT:
+Legal text:
 {text}
-""")
-# ----------- TEXT INPUT API -----------
 
-@app.post("/simplify/")
-async def simplify_text(request: TextRequest):
-    try:
-        chain = prompt | llm
-        response = chain.invoke({"text": request.text})
+Simplified version:"""
 
-        raw_output = response.content.strip()
+
+def simplify_full_document(text):
+    """Chunk and simplify a full document."""
+    chunks = chunk_text(text)
+    simplified_parts = []
+
+    for chunk in chunks:
+        prompt = SIMPLIFY_PROMPT.format(text=chunk)
+        result = generate_with_gemini(prompt)
+        simplified_parts.append(result.strip())
+
+    return "\n\n".join(simplified_parts)
+
+# ----------- RISK ANALYSIS -----------
+
+RISK_PROMPT = """Analyze the following legal text and identify every potential risk for the person signing or agreeing to these terms.
+
+Check carefully for ALL of these risk categories:
+- Financial risks: hidden fees, penalties, price escalation, payment obligations, late charges
+- Liability risks: unlimited liability, indemnification obligations, assumption of risk
+- Termination risks: auto-renewal, difficult exit clauses, early termination penalties
+- Privacy risks: broad data collection, data sharing with third parties, surveillance
+- IP risks: transfer of intellectual property rights, broad licensing grants
+- Legal risks: unfavorable jurisdiction, mandatory arbitration, class action waiver
+- Obligation risks: non-compete clauses, exclusivity, restrictive covenants
+- Warranty risks: "as-is" disclaimers, no warranty, limitation of remedies
+- Time-sensitive risks: short notice periods, tight deadlines, auto-renewal windows
+- One-sided terms: unilateral amendment rights, unilateral termination rights
+
+For EACH risk found provide:
+1. title: A short title (3-6 words)
+2. level: "High", "Medium", or "Low"
+3. description: 1-2 sentences explaining the risk and its impact
+
+Return ONLY valid JSON in this exact format:
+{{"risks": [{{"title": "...", "level": "High", "description": "..."}}]}}
+
+If no risks found return: {{"risks": []}}
+
+Legal text:
+{text}
+
+JSON:"""
+
+
+def analyze_risks(text):
+    """Analyze risks in legal text using chunking."""
+    chunks = chunk_text(text)
+    all_risks = []
+
+    for chunk in chunks:
+        prompt = RISK_PROMPT.format(text=chunk)
+        raw = generate_with_gemini(prompt)
 
         try:
-            start = raw_output.find("{")
-            end = raw_output.rfind("}") + 1
-            clean_json = raw_output[start:end]
+            start = raw.find("{")
+            end = raw.rfind("}") + 1
+            if start != -1 and end > start:
+                parsed = json.loads(raw[start:end])
+                risks = parsed.get("risks", [])
+                all_risks.extend(risks)
+        except (json.JSONDecodeError, ValueError):
+            pass
 
-            parsed = json.loads(clean_json)
+    return all_risks
 
-            simplified = parsed.get("simplified_text", "").strip()
+# ----------- TAMIL TRANSLATION (GEMINI) -----------
 
-        except Exception:
-            simplified = raw_output
+def translate_to_tamil(text):
+    """Translate text to Tamil using Gemini API."""
+    try:
+        prompt = (
+            "Translate the following English text into simple spoken Tamil. "
+            "Keep the translation natural and easy to understand. "
+            "Return ONLY the Tamil translation, nothing else.\n\n"
+            f"Text:\n{text}"
+        )
+        response = gemini_model.generate_content(prompt)
+        return response.text.strip()
+    except Exception:
+        return ""
 
-        # ----------- AUDIO GENERATION -----------
+# ----------- AUDIO GENERATION -----------
 
-        audio_url = ""
+def generate_audio(text, request):
+    """Generate audio and return the URL."""
+    if not text:
+        return ""
 
-        if simplified:
-            file_hash = hashlib.md5(simplified.encode()).hexdigest()
-            file_path = f"audio/{file_hash}.mp3"
+    file_hash = hashlib.md5(text.encode()).hexdigest()
+    file_path = f"audio/{file_hash}.mp3"
 
-            if not os.path.exists(file_path):
-                tts = gTTS(text=simplified, lang='en')
-                tts.save(file_path)
+    if not os.path.exists(file_path):
+        tts = gTTS(text=text, lang="en")
+        tts.save(file_path)
 
-            audio_url = f"http://127.0.0.1:8000/audio/{file_hash}.mp3"
-
-        return {
-            "simplified_text": simplified,
-            "audio_url": audio_url
-        }
-
-    except Exception as e:
-        return {"error": str(e)}
+    base_url = str(request.base_url).rstrip("/")
+    return f"{base_url}/audio/{file_hash}.mp3"
 
 # ----------- FILE TEXT EXTRACTION -----------
 
+ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt"}
+
+
 def extract_text_from_file(file: UploadFile):
-    text = ""
+    """Extract text from uploaded file."""
+    filename = file.filename.lower()
+    ext = os.path.splitext(filename)[1]
 
-    if file.filename.endswith(".pdf"):
+    if ext not in ALLOWED_EXTENSIONS:
+        raise ValueError(
+            f"Unsupported file type '{ext}'. Allowed: {', '.join(ALLOWED_EXTENSIONS)}"
+        )
+
+    if ext == ".pdf":
         pdf = PdfReader(file.file)
-        for page in pdf.pages:
-            text += page.extract_text() or ""
-
-    elif file.filename.endswith(".docx"):
+        text = "\n".join(page.extract_text() or "" for page in pdf.pages)
+    elif ext == ".docx":
         doc = docx.Document(file.file)
-        for para in doc.paragraphs:
-            text += para.text + "\n"
-
+        text = "\n".join(para.text for para in doc.paragraphs)
     else:
         text = file.file.read().decode("utf-8")
 
     return text.strip()
 
-# ----------- FILE UPLOAD API -----------
+# ----------- API ENDPOINTS -----------
 
-@app.post("/upload/")
-async def upload_file(file: UploadFile = File(...)):
+@app.post("/simplify/")
+async def simplify_text_endpoint(request: Request, text_request: TextRequest):
+    if not text_request.text.strip():
+        raise HTTPException(status_code=400, detail="Text cannot be empty.")
+
     try:
-        extracted_text = extract_text_from_file(file)
-
-        if not extracted_text:
-            return {"error": "No text extracted"}
-
-        # Limit text size (important for LLM)
-        extracted_text = extracted_text[:1000]
-
-        chain = prompt | llm
-        response = chain.invoke({"text": extracted_text})
-
-        raw_output = response.content.strip()
-
-        try:
-            start = raw_output.find("{")
-            end = raw_output.rfind("}") + 1
-            clean_json = raw_output[start:end]
-
-            parsed = json.loads(clean_json)
-
-            simplified = parsed.get("simplified_text", "").strip()
-
-        except Exception:
-            simplified = raw_output
-
-        # ----------- AUDIO GENERATION -----------
-
-        audio_url = ""
-
-        if simplified:
-            file_hash = hashlib.md5(simplified.encode()).hexdigest()
-            file_path = f"audio/{file_hash}.mp3"
-
-            if not os.path.exists(file_path):
-                tts = gTTS(text=simplified, lang='en')
-                tts.save(file_path)
-
-            audio_url = f"http://127.0.0.1:8000/audio/{file_hash}.mp3"
+        simplified = simplify_full_document(text_request.text)
+        tamil = translate_to_tamil(simplified)
+        audio_url = generate_audio(simplified, request)
 
         return {
             "simplified_text": simplified,
-            "audio_url": audio_url
+            "tamil_text": tamil,
+            "audio_url": audio_url,
         }
-
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(
+            status_code=500, detail=f"Failed to simplify text: {str(e)}"
+        )
 
-# ----------- AUDIO ROUTE -----------
+
+@app.post("/upload/")
+async def upload_file_endpoint(request: Request, file: UploadFile = File(...)):
+    try:
+        extracted_text = extract_text_from_file(file)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    if not extracted_text:
+        raise HTTPException(
+            status_code=400,
+            detail="No text could be extracted from the uploaded file.",
+        )
+
+    try:
+        simplified = simplify_full_document(extracted_text)
+        tamil = translate_to_tamil(simplified)
+        audio_url = generate_audio(simplified, request)
+
+        return {
+            "simplified_text": simplified,
+            "tamil_text": tamil,
+            "audio_url": audio_url,
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to process uploaded file: {str(e)}"
+        )
+
+
+@app.post("/risk-analysis/")
+async def risk_analysis_text_endpoint(request: Request, text_request: TextRequest):
+    if not text_request.text.strip():
+        raise HTTPException(status_code=400, detail="Text cannot be empty.")
+
+    try:
+        risks = analyze_risks(text_request.text)
+        return {"risks": risks}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to analyze risks: {str(e)}"
+        )
+
+
+@app.post("/risk-analysis/upload/")
+async def risk_analysis_upload_endpoint(
+    request: Request, file: UploadFile = File(...)
+):
+    try:
+        extracted_text = extract_text_from_file(file)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    if not extracted_text:
+        raise HTTPException(
+            status_code=400,
+            detail="No text could be extracted from the uploaded file.",
+        )
+
+    try:
+        risks = analyze_risks(extracted_text)
+        return {"risks": risks}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to analyze risks: {str(e)}"
+        )
+
 
 @app.get("/audio/{filename}")
 async def get_audio(filename: str):
-    file_path = f"audio/{filename}"
+    file_path = os.path.join("audio", filename)
 
-    if os.path.exists(file_path):
-        return FileResponse(file_path, media_type="audio/mpeg")
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Audio file not found.")
 
-    return {"error": "Audio not found"}
+    return FileResponse(file_path, media_type="audio/mpeg")
