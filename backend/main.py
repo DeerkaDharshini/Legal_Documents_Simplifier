@@ -17,10 +17,8 @@ import re
 import io
 
 from PIL import Image
-
 # OCR import (ADDED)
 from ocr import extract_text_from_image, extract_text_from_pdf
-
 
 app = FastAPI()
 
@@ -46,9 +44,7 @@ print("Gemini API configured successfully!")
 class TextRequest(BaseModel):
     text: str
 
-
-def chunk_text(text, max_chunk_size=4000):
-    """Split text into chunks at sentence boundaries."""
+def chunk_text(text, max_chunk_size=3000):
     if len(text) <= max_chunk_size:
         return [text]
 
@@ -68,6 +64,7 @@ def chunk_text(text, max_chunk_size=4000):
         chunks.append(current_chunk.strip())
 
     return chunks if chunks else [text[:max_chunk_size]]
+
 
 
 def generate_with_gemini(prompt_text):
