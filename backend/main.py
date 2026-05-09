@@ -30,13 +30,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from dotenv import load_dotenv
+load_dotenv()
 os.makedirs("audio", exist_ok=True)
 
 
-GEMINI_API_KEY = "AIzaSyC9BIZKEQidgNoJ4sRczd9wYEY0tcnwqmk"
+api_key = os.getenv("GEMINI_API_KEY")
 
-
-genai.configure(api_key=GEMINI_API_KEY)
+genai.configure(api_key=api_key)
 gemini_model = genai.GenerativeModel("gemini-2.0-flash")
 print("Gemini API configured successfully!")
 
