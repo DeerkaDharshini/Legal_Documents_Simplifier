@@ -33,7 +33,7 @@ app.add_middleware(
 os.makedirs("audio", exist_ok=True)
 
 
-GEMINI_API_KEY = "AIzaSyBMwqSzCzblHXEvgu20dMw75Vrzu1enfHk"
+GEMINI_API_KEY = "AIzaSyC9BIZKEQidgNoJ4sRczd9wYEY0tcnwqmk"
 
 
 genai.configure(api_key=GEMINI_API_KEY)
